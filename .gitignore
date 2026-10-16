@@ -1,0 +1,20 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Local secrets and tooling (the coach code lives only in Apps Script Script Properties)
+.env
+.env.*
+*.local.js
+.clasp.json
+.clasprc.json
+node_modules/
+
+# Player names stay off the public repo
+apps-script/Roster.gs
+
+# Local test harness
+dev/

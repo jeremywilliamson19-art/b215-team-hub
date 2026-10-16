@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>B215 Team Hub</title>
+  <meta name="description" content="Schedule, treat sign-ups and allergies for B215, 2026 Junior Jazz 2nd Grade Boys.">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23d9550b'/%3E%3Cpath d='M3 32h58M32 3v58M12 11c10 9 10 33 0 42M52 11c-10 9-10 33 0 42' stroke='%2315213b' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Public+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Apply a saved theme before first paint so the page doesn't flash.
+    try { var t = localStorage.getItem("b215.theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#schedule">Skip to schedule</a>
+
+  <header class="band">
+    <div class="wrap">
+      <div class="topline">
+        <div class="eyebrow" id="hdr-season">2026 Junior Jazz · 2nd Grade Boys</div>
+        <button type="button" class="theme-btn" id="theme-btn" aria-label="Color theme: automatic">Auto</button>
+      </div>
+      <h1 id="hdr-team">B215</h1>
+      <div class="meta">
+        <span>Coach <b id="hdr-coach">Jeremy Williamson</b></span>
+        <span id="hdr-phone-wrap" hidden><a id="hdr-phone" class="meta-link"></a></span>
+        <span id="hdr-location-wrap" hidden><b id="hdr-location"></b></span>
+      </div>
+      <nav class="jump" aria-label="Sections">
+        <a href="#schedule">Schedule &amp; treats</a>
+        <a href="#allergies">Allergies</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div id="banner" class="notice err banner" role="alert" hidden>
+        <span id="banner-text"></span>
+        <button type="button" class="btn-ghost" id="banner-retry" hidden>Try again</button>
+      </div>
+
+      <section class="welcome" aria-labelledby="h-welcome">
+        <h2 id="h-welcome">Welcome to the team</h2>
+        <div id="welcome-text"><p class="muted loading-text">Loading…</p></div>
+      </section>
+
+      <section aria-labelledby="h-expect">
+        <h2 id="h-expect">What to expect</h2>
+        <ul class="expect" id="expect-list"></ul>
+      </section>
+
+      <section id="schedule" aria-labelledby="h-sched" tabindex="-1">
+        <h2 id="h-sched">Schedule &amp; treats</h2>
+        <p class="muted" id="treat-note"></p>
+        <p class="small me-line" id="me-line"></p>
+        <div class="games" id="games" aria-live="polite" aria-busy="true">
+          <div class="empty">Loading the schedule…</div>
+        </div>
+      </section>
+
+      <section id="allergies" aria-labelledby="h-all" tabindex="-1">
+        <h2 id="h-all">Team allergies</h2>
+        <p class="muted">Check this before you pick treats.</p>
+        <div class="allergy-list" id="allergy-list" aria-live="polite">
+          <div class="empty">Loading allergies…</div>
+        </div>
+      </section>
+
+      <section id="coach-login" class="coach" aria-labelledby="h-login" hidden>
+        <h2 id="h-login">Coach login</h2>
+        <form class="card" id="login-form" novalidate>
+          <div class="field">
+            <label for="c-code">Coach code</label>
+            <input id="c-code" type="password" autocomplete="current-password" maxlength="100">
+          </div>
+          <div class="row">
+            <button type="submit" class="btn-primary" id="c-btn">Open coach tools</button>
+            <span id="c-status" class="status" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+
+      <section id="coach" class="coach" aria-labelledby="h-coach" tabindex="-1" hidden>
+        <div class="row spread">
+          <h2 id="h-coach">Coach tools</h2>
+          <button type="button" class="btn-ghost" id="coach-out">Sign out</button>
+        </div>
+        <p class="muted">Only someone with the coach code sees this. Schedule rows above now show remove and clear buttons.</p>
+
+        <form class="card" id="roster-form" novalidate>
+          <h3>Roster &amp; allergies</h3>
+          <p class="muted small">Allergies you enter here show on the public allergy board. Treat codes appear once a family claims a game. Read one to a parent who lost theirs.</p>
+          <div class="roster-head" aria-hidden="true"><span>Player</span><span>Allergies</span><span>Treat code</span><span></span></div>
+          <div class="roster-rows" id="roster-rows"></div>
+          <div class="row">
+            <button type="button" class="btn-ghost" id="r-add">Add player</button>
+            <button type="submit" class="btn-primary" id="r-btn">Save roster</button>
+            <span id="r-status" class="status" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+
+        <form class="card" id="game-form" novalidate>
+          <h3>Add a game</h3>
+          <div class="grid2">
+            <div class="field"><label for="g-date">Date</label><input id="g-date" type="date" required></div>
+            <div class="field"><label for="g-time">Tip-off</label><input id="g-time" type="time"></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label for="g-opp">Opponent</label><input id="g-opp" maxlength="60" placeholder="e.g. B212"></div>
+            <div class="field"><label for="g-court">Court</label><input id="g-court" maxlength="40" placeholder="e.g. Court 2"></div>
+          </div>
+          <div class="field">
+            <label for="g-ha">Home / away</label>
+            <select id="g-ha"><option value="">—</option><option>Home</option><option>Away</option></select>
+          </div>
+          <div class="row">
+            <button type="submit" class="btn-primary" id="g-btn">Add game</button>
+            <span id="g-status" class="status" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+
+        <form class="card" id="set-form" novalidate>
+          <h3>Team details</h3>
+          <div class="grid2">
+            <div class="field"><label for="s-team">Team name</label><input id="s-team" maxlength="60"></div>
+            <div class="field"><label for="s-season">Season line</label><input id="s-season" maxlength="120"></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label for="s-coach">Coach name(s)</label><input id="s-coach" maxlength="80"></div>
+            <div class="field"><label for="s-phone">Coach phone <span class="hint">(shown publicly)</span></label><input id="s-phone" type="tel" maxlength="30"></div>
+          </div>
+          <div class="field"><label for="s-location">Location</label><input id="s-location" maxlength="120"></div>
+          <div class="field"><label for="s-welcome">Welcome message <span class="hint">(blank line between paragraphs)</span></label><textarea id="s-welcome" rows="5" maxlength="2000"></textarea></div>
+          <div class="field"><label for="s-expect">What to expect <span class="hint">(one item per line)</span></label><textarea id="s-expect" rows="6" maxlength="2000"></textarea></div>
+          <div class="grid2">
+            <div class="field"><label for="s-limit">Treat games per family</label><input id="s-limit" type="number" min="1" max="10" inputmode="numeric"></div>
+            <div class="field"><label for="s-treatnote">Treat guidance</label><input id="s-treatnote" maxlength="400"></div>
+          </div>
+          <div class="field"><label for="s-byes">Bye weeks <span class="hint">(one per line: 2026-10-31 Halloween)</span></label><textarea id="s-byes" rows="3" maxlength="1000"></textarea></div>
+          <div class="row">
+            <button type="submit" class="btn-primary" id="s-btn">Save team details</button>
+            <span id="s-status" class="status" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer class="wrap foot">
+    <span id="foot-team">B215 Team Hub</span>
+    <a href="#coach" id="coach-link">Coach login</a>
+  </footer>
+
+  <dialog class="dlg" id="treat-dlg" aria-labelledby="td-title">
+    <form id="td-form" class="dlg-body" novalidate>
+      <h2 id="td-title">Bring treats</h2>
+      <p class="muted" id="td-game"></p>
+      <div class="field" id="td-player-field">
+        <label for="td-player">Your player</label>
+        <select id="td-player"><option value="">Choose your player…</option></select>
+      </div>
+      <div class="field" id="td-code-field" hidden>
+        <label for="td-code">Treat code</label>
+        <input id="td-code" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" class="code-input" aria-describedby="td-code-hint">
+        <span class="hint" id="td-code-hint">The 6-character code you got the first time your family signed up for treats.</span>
+      </div>
+      <p id="td-status" class="status" role="status" aria-live="polite"></p>
+      <div class="row dlg-actions">
+        <button type="button" class="btn-ghost" id="td-cancel">Cancel</button>
+        <button type="submit" class="btn-primary" id="td-submit">Sign up</button>
+      </div>
+    </form>
+    <div class="dlg-body" id="td-done" hidden>
+      <h2 tabindex="-1" id="td-done-title">You're on treats!</h2>
+      <p id="td-done-game"></p>
+      <div class="notice ok code-card">
+        <b>Your treat code: <span class="code" id="td-done-code"></span></b>
+        <p>Save this code. You'll need it to cancel or change your game from another phone or computer. This is the only time it's shown.</p>
+      </div>
+      <div class="row dlg-actions">
+        <button type="button" class="btn-ghost" id="td-copy">Copy code</button>
+        <button type="button" class="btn-primary" id="td-close">Done</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
