@@ -10,11 +10,13 @@
   const KEY_COACH = "b215.coach"; // sessionStorage: coach code for this tab only
   const KEY_THEME = "b215.theme";
   const FALLBACK_ERROR = "Couldn't save. Try again.";
+  const REFRESH_MS = 30000; // how often open pages pick up other people's changes
 
   const $ = (id) => document.getElementById(id);
 
   const S = {
     pub: null,       // public payload from the API
+    pubKey: "",      // its JSON, to tell whether a background refresh changed anything
     me: null,        // this device's family: { player, editCode }
     coachCode: null,
     coachData: null,
@@ -311,11 +313,19 @@
   function applyPublic(pub) {
     if (!pub) return;
     S.pub = pub;
+    S.pubKey = JSON.stringify(pub);
     S.loadedAt = Date.now();
     // A player removed from the roster can't claim anymore; drop them from this device.
     if (S.me && pub.roster.indexOf(S.me.player) < 0) setMe(null);
     hideBanner();
+    // Re-rendering replaces the schedule buttons, so put keyboard focus back where it was.
+    const active = document.activeElement;
+    const focusLabel = active && $("games").contains(active) ? active.getAttribute("aria-label") : null;
     renderAll();
+    if (focusLabel) {
+      const again = [...$("games").querySelectorAll("button")].find((b) => b.getAttribute("aria-label") === focusLabel);
+      if (again) again.focus({ preventScroll: true });
+    }
   }
 
   function setMe(me) {
@@ -333,7 +343,14 @@
 
   async function loadPublic(quiet) {
     try {
-      applyPublic(await api("get"));
+      const pub = await api("get");
+      if (quiet) {
+        // Background refresh: skip when nothing changed, or while a schedule button is
+        // mid-action (armed for a second tap or saving), so we don't yank it away.
+        if (JSON.stringify(pub) === S.pubKey) { S.loadedAt = Date.now(); return; }
+        if ($("games").querySelector('[data-armed="1"], [aria-busy="true"]')) return;
+      }
+      applyPublic(pub);
     } catch (err) {
       if (quiet) return;
       $("games").setAttribute("aria-busy", "false");
@@ -731,10 +748,17 @@
   $("banner-retry").addEventListener("click", (e) => busy(e.currentTarget, "Loading…", () => loadPublic(false)));
   $("theme-btn").addEventListener("click", cycleTheme);
   window.addEventListener("hashchange", routeCoach);
-  // Pick up other families' treat claims when a parent comes back to the tab.
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && S.pub && Date.now() - S.loadedAt > 60000) loadPublic(true);
-  });
+  // Keep every open page current with everyone else's changes: refresh every 30 seconds
+  // while the page is visible, and right away when someone comes back to the tab.
+  let refreshing = false;
+  async function backgroundRefresh(minAge) {
+    if (refreshing || !S.pub || document.visibilityState !== "visible" || Date.now() - S.loadedAt < minAge) return;
+    refreshing = true;
+    try { await loadPublic(true); } finally { refreshing = false; }
+  }
+  setInterval(() => backgroundRefresh(REFRESH_MS - 1000), REFRESH_MS);
+  document.addEventListener("visibilitychange", () => backgroundRefresh(5000));
+  window.addEventListener("focus", () => backgroundRefresh(5000));
 
   applyTheme(readStore("localStorage", KEY_THEME) || "auto");
   const saved = readJSON("localStorage", KEY_ME);
